@@ -20,3 +20,9 @@ while True:
 
     # Convert the valid input from a string to an integer
     stock = int(stock)
+
+     #part 5: Reject negative numbers
+    if stock < 0:
+        print("Error: Stock quantity cannot be negative.")
+        failed_entries += 1
+        continue
