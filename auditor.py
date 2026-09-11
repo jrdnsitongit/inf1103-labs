@@ -32,3 +32,8 @@ while True:
 
     print("Stock accepted.")
     print("Current inventory:", inventory)
+
+    #part 7: Check if inventory exceeds 500 units
+    if inventory > 500:
+        print("ALERT: Overstock! Inventory exceeds 500 units.")
+        break
