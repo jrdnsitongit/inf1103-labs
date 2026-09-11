@@ -8,4 +8,6 @@ while True:
     #continuously asking user for stock input
     stock = input("Enter stock item (or type 'quit' to exit): ")
 
-    
+    # Step 3: Check if the user wants to quit
+    if stock.lower() == "quit":
+        break
