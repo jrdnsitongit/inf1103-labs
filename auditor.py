@@ -37,3 +37,8 @@ while True:
     if inventory > 500:
         print("ALERT: Overstock! Inventory exceeds 500 units.")
         break
+
+    #part 8: Print the final report
+    print("\n--- Inventory Report ---")
+    print("Total Units Processed:", inventory)
+    print("Number of Failed/Rejected Entries:", failed_entries)
