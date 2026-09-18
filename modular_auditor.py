@@ -40,3 +40,28 @@ def generate_report(total_units, failed_attempts):
     print("\n--- Inventory Report ---")
     print(f"Total Deliveries Processed: {total_units}")
     print(f"Number of Failed/Rejected Entries: {failed_attempts}")
+
+ # Main program
+inventory = 0
+failed_entries = 0
+
+while True:
+
+    # Get validated input
+    result = get_valid_input()
+
+    # Exit if user types quit
+    if result == "quit":
+        break
+
+    # Process the delivery
+    inventory = process_delivery(inventory, result)
+
+    # Calculate tax for this delivery
+    tax = calculate_tax(result)
+
+    print(f"Added {result} to inventory. Total inventory: {inventory}")
+    print(f"Tax for this delivery: {tax:.2f}")
+
+# Generate final report after user quits
+generate_report(inventory, failed_entries)
