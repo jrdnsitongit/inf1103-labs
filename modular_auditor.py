@@ -30,3 +30,7 @@ def process_delivery(current_total, new_value):
     new_total = current_total + new_value
     return new_total
 
+# Part 3: Calculate 10% tax for the delivery
+def calculate_tax(amount):
+    tax = amount * 0.10
+    return tax
