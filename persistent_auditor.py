@@ -79,27 +79,34 @@ def generate_report(total_units, failed_attempts, history):
     print(f"Transaction History: {history}")
     print(f"Number of Failed/Rejected Entries: {failed_attempts}")
 
- # Main program
-inventory = 0
-failed_entries = 0
+  # Main program
+if __name__ == "__main__":
+    # 1. Load existing data or start fresh
+    inventory, transaction_history = load_inventory()
+    failed_entries = 0
 
-while True:
+    print(f"Starting inventory total loaded from file: {inventory}")
+    print(f"Previous history loaded: {transaction_history}\n")
 
-    # Get validated input
-    result = get_valid_input()
+    # 2. Continuous Input Loop
+    while True:
+        result = get_valid_input()
 
-    # Exit if user types quit
-    if result == "quit":
-        break
+        if result == "quit":
+            break
 
-    # Process the delivery
-    inventory = process_delivery(inventory, result)
+        # Process valid entry
+        inventory = process_delivery(inventory, result)
+        transaction_history.append(result)  # Track transaction history in Python list
 
-    # Calculate tax for this delivery
-    tax = calculate_tax(result)
+        tax = calculate_tax(result)
 
-    print(f"Added {result} to inventory. Total inventory: {inventory}")
-    print(f"Tax for this delivery: {tax:.2f}")
+        print(f"Added {result} to inventory. Total inventory: {inventory}")
+        print(f"Tax for this delivery: {tax:.2f}\n")
 
-# Generate final report after user quits
-generate_report(inventory, failed_entries)
+    # 3. Save data upon quitting
+    save_inventory(inventory, transaction_history)
+    print("\nData successfully saved to inventory.txt.")
+
+    # 4. Final summary report
+    generate_report(inventory, failed_entries, transaction_history)
