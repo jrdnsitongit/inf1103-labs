@@ -23,6 +23,18 @@ def load_inventory():
         # File is corrupted or empty, fallback to defaults
         return 0, []
 
+# Part 2: Save total and history back to inventory.txt
+def save_inventory(total, history):
+    """
+    Saves the total inventory to the first line, 
+    followed by each individual transaction amount on a new line.
+    """
+    with open("inventory.txt", "w") as file:
+        file.write(f"{total}\n")
+        for amount in history:
+            file.write(f"{amount}\n")
+
+
 # Part 3: Function to get and validate user input
 def get_valid_input():
     global failed_entries
