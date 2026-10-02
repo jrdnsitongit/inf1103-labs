@@ -176,47 +176,43 @@ def display_all(inventory):
             print(f"ID: {p['id']} | Name: {p['name']} | Price: ${p['price']:.2f} | Stock: {p['stock']}")
     print("--------------------------------------------------")
   # Main program
+# Main Menu Application Loop
 if __name__ == "__main__":
-    # 1. Load existing data or start fresh
-    inventory, transaction_history = load_inventory()
-    failed_entries = 0
-    next_product_id = max(
-        (product_id for product_id, _, _ in transaction_history),
-        default=1000,
-    ) + 1
+    print("==========================================")
+    print("INVENTORY MANAGEMENT SYSTEM")
+    print("==========================================\n")
 
-    if not transaction_history:
-        print(f"Current Orders:")
-        print("No previous orders found")
-    else:
-        print(f"Current Inventory: ")
-        for product_id, product_name, quantity in transaction_history:
-            print(f"{product_id}, {product_name}, {quantity}")
-        print()
+    inventory = load_inventory()
 
-    # 2. Continuous Input Loop
     while True:
-        result = get_valid_input()
+        print("--------- MENU ---------")
+        print("1. Display All Products")
+        print("2. Add Product")
+        print("3. Update Stock")
+        print("4. Search Product")
+        print("5. Save Inventory")
+        print("6. Exit")
+        print("------------------------")
 
-        if result == "quit":
+        option = input("\nEnter option: ").strip()
+
+        if option == "1":
+            display_all(inventory)
+        elif option == "2":
+            add_product(inventory)
+        elif option == "3":
+            update_stock(inventory)
+        elif option == "4":
+            search_product(inventory)
+        elif option == "5":
+            save_inventory(inventory)
+        elif option == "6":
+            print("\nSaving inventory before exit...")
+            with open(INVENTORY_FILE, "w") as file:
+                json.dump(inventory, file, indent=4)
+            print("Inventory saved successfully.\n")
+            print("Thank you for using Inventory Management System.")
+            print("Program terminated.")
             break
-
-        # Process valid entry
-        product_name, quantity = result
-        inventory = process_delivery(inventory, quantity)
-        product_id = next_product_id
-        transaction_history.append((product_id, product_name, quantity))
-        next_product_id += 1
-
-        tax = calculate_tax(quantity)
-
-        print("New Order Added")
-        print(f"{product_id}, {product_name}, {quantity}")
-        print(f"Tax: {tax:.2f} | Total Inventory: {inventory}\n")
-
-    # 3. Save data upon quitting
-    save_inventory(inventory, transaction_history)
-    print("Inventory successfully saved to inventory.txt.")
-
-    # 4. Final summary report
-    generate_report(inventory, failed_entries, transaction_history)
+        else:
+            print("Invalid option. Please enter a number from 1 to 6.")
