@@ -164,6 +164,17 @@ def search_product(inventory):
             return
 
     print("\nProduct not found.")
+#display all products function
+def display_all(inventory):
+    """Prints all products formatted in line with the sample outputs."""
+    print("\nCurrent Inventory")
+    print("--------------------------------------------------")
+    if not inventory:
+        print("No products currently in inventory.")
+    else:
+        for p in inventory:
+            print(f"ID: {p['id']} | Name: {p['name']} | Price: ${p['price']:.2f} | Stock: {p['stock']}")
+    print("--------------------------------------------------")
   # Main program
 if __name__ == "__main__":
     # 1. Load existing data or start fresh
