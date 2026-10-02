@@ -146,7 +146,24 @@ def update_stock(inventory):
                 return
 
     print("\nProduct not found.")
+#search product function
+def search_product(inventory):
+    """Searches for a product by ID or name and prints multiline output."""
+    print("\nSearch Product")
+    prod_id = input("Enter Product ID: ").strip()
 
+    for p in inventory:
+        if p["id"].lower() == prod_id.lower() or prod_id.lower() in p["name"].lower():
+            print("\nProduct Found")
+            print("--------------------------------------------------")
+            print(f"ID: {p['id']}")
+            print(f"Name: {p['name']}")
+            print(f"Price: ${p['price']:.2f}")
+            print(f"Stock: {p['stock']}")
+            print("--------------------------------------------------")
+            return
+
+    print("\nProduct not found.")
   # Main program
 if __name__ == "__main__":
     # 1. Load existing data or start fresh
