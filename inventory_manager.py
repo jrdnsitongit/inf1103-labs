@@ -1,68 +1,39 @@
-# Part 1: Load saved data from inventory.txt
+import json
+
+INVENTORY_FILE = "inventory.json"
+
+# Part 1: Load saved data from inventory.json
 def load_inventory():
     """
-    Reads inventory.txt if it exists.
-    Returns the total inventory count and the list of past transaction amounts.
-    If the file does not exist, returns 0 and an empty list.
+    Reads inventory.json if it exists.
+    Returns the loaded list of product dictionaries.
+    If the file does not exist, returns initial default inventory list.
     """
     try:
-        with open("inventory.txt", "r") as file:
-            lines = file.readlines()
-            if not lines:
-                return 0, []
-            
-            # Read total from line 1, and history from remaining lines
-            saved_total = int(lines[0].strip())
-            saved_history = []
-            next_product_id = 1001
-            for line in lines[1:]:
-                line = line.strip()
-                if not line:
-                    continue
+        with open(INVENTORY_FILE, "r") as file:
+            inventory = json.load(file)
+            print("inventory.json found.")
+            print("Inventory loaded successfully.\n")
+            return inventory
+    except (FileNotFoundError, json.JSONDecodeError):
+        print("inventory.json not found.")
+        print("Starting with initial inventory.\n")
+        return get_default_inventory()
 
-                if "|" in line or line.count(",") >= 2:
-                    separator = "|" if "|" in line else ","
-                    fields = [field.strip() for field in line.split(separator)]
-                    if len(fields) == 3:
-                        product_id, product_name, quantity = fields
-                        product_id = int(product_id)
-                        saved_history.append((product_id, product_name, int(quantity)))
-                        next_product_id = max(next_product_id, product_id + 1)
-                    elif len(fields) == 2:
-                        product_name, quantity = fields
-                        saved_history.append((next_product_id, product_name, int(quantity)))
-                        next_product_id += 1
-                else:
-                    if line.startswith("(") and line.endswith(")"):
-                        product_name, quantity = line[1:-1].split(",", 1)
-                        product_name = product_name.strip().strip("'\"")
-                        quantity = int(quantity.strip())
-                    else:
-                        product_name = "Unknown"
-                        quantity = int(line)
-
-                    saved_history.append((next_product_id, product_name, quantity))
-                    next_product_id += 1
-
-            return saved_total, saved_history
-
-    except FileNotFoundError:
-        # File doesn't exist yet (first time running), return defaults safely
-        return 0, []
-    except ValueError:
-        # File is corrupted or empty, fallback to defaults
-        return 0, []
-
-# Part 2: Save total and history back to inventory.txt
-def save_inventory(total, history):
-    """
-    Saves the total inventory to the first line, 
-    followed by each individual transaction amount on a new line.
-    """
-    with open("inventory.txt", "w") as file:
-        file.write(f"{total}\n")
-        for product_id, product_name, quantity in history:
-            file.write(f"{product_id}, {product_name}, {quantity}\n")
+def get_default_inventory():
+    """Default inventory items matching the lab requirements."""
+    return [
+        {"id": "P001", "name": "Laptop", "price": 1200.00, "stock": 15},
+        {"id": "P002", "name": "Mouse", "price": 25.50, "stock": 40},
+        {"id": "P003", "name": "Keyboard", "price": 45.00, "stock": 25}
+    ]
+# Part 2: Save inventory list to inventory.json
+def save_inventory(inventory):
+    """Saves current inventory list to inventory.json."""
+    print("\nSaving inventory...")
+    with open(INVENTORY_FILE, "w") as file:
+        json.dump(inventory, file, indent=4)
+    print("Inventory saved successfully to inventory.json.")
 
 
 # Part 3: Function to get and validate user input
