@@ -101,6 +101,30 @@ def generate_report(total_units, failed_attempts, history):
     """
     print(f"Number of Failed/Rejected Entries: {failed_attempts}")
 
+#json functionalties
+def add_product(inventory):
+    """Adds a new product dictionary using exact prompts."""
+    print("\nAdd New Product")
+    prod_id = input("Product ID: ").strip()
+    name = input("Product Name: ").strip()
+    
+    try:
+        price = float(input("Price: "))
+        stock = int(input("Stock Quantity: "))
+    except ValueError:
+        print("Invalid number format. Product creation canceled.")
+        return
+
+    new_item = {
+        "id": prod_id,
+        "name": name,
+        "price": price,
+        "stock": stock
+    }
+    
+    inventory.append(new_item)
+    print("\nProduct added successfully!")
+
   # Main program
 if __name__ == "__main__":
     # 1. Load existing data or start fresh
