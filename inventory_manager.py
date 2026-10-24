@@ -84,36 +84,45 @@ class Inventory:
 
 INVENTORY_FILE = "inventory.json"
 
-def load_inventory():
+def load_inventory() -> Inventory:
     """
     Reads inventory.json if it exists.
     Returns the loaded list of product dictionaries.
     If the file does not exist, returns initial default inventory list.
     """
+    inventory = Inventory()
     try:
         with open(INVENTORY_FILE, "r") as file:
-            inventory = json.load(file)
-            print("inventory.json found.")
-            print("Inventory loaded successfully.\n")
-            return inventory
-    except (FileNotFoundError, json.JSONDecodeError):
+            data = json.load(file)
+        for item in data:
+            # accept both "product_id" (new) and "id" (Week 5 format)
+            product_id = item.get("product_id", item.get("id"))
+            inventory.add_product(
+                Product(product_id, item["name"], item["price"], item["stock"])
+            )
+        print("inventory.json found.")
+        print("Inventory loaded successfully.\n")
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, TypeError, AttributeError):
         print("inventory.json not found.")
         print("Starting with initial inventory.\n")
-        return get_default_inventory()
+        inventory = Inventory()
+        for p in get_default_products():
+            inventory.add_product(p)
+    return inventory
 
-def get_default_inventory():
+def get_default_products() -> list:
     """Default inventory items matching the lab requirements."""
     return [
-        {"id": "P001", "name": "Laptop", "price": 1200.00, "stock": 15},
-        {"id": "P002", "name": "Mouse", "price": 25.50, "stock": 40},
-        {"id": "P003", "name": "Keyboard", "price": 45.00, "stock": 25}
+        Product("P001", "Laptop", 1200.00, 15),
+        Product("P002", "Mouse", 25.50, 40),
+        Product("P003", "Keyboard", 45.00, 25),
     ]
 # Part 2: Save inventory list to inventory.json
 def save_inventory(inventory):
     """Saves current inventory list to inventory.json."""
     print("\nSaving inventory...")
     with open(INVENTORY_FILE, "w") as file:
-        json.dump(inventory, file, indent=4)
+        json.dump(inventory.to_list(), file, indent=4)
     print("Inventory saved successfully to inventory.json.")
 
 
@@ -183,11 +192,15 @@ def generate_report(total_units, failed_attempts, history):
     print(f"Number of Failed/Rejected Entries: {failed_attempts}")
 
 #json functionalties
-def add_product(inventory):
+def add_product(inventory: Inventory) -> None:
     """Adds a new product dictionary using exact prompts."""
     print("\nAdd New Product")
-    prod_id = input("Product ID: ").strip()
+    product_id = input("Product ID: ").strip()
     name = input("Product Name: ").strip()
+
+    if not product_id or not name:
+        print("Product ID and name cannot be empty. Product creation canceled.")
+        return
     
     try:
         price = float(input("Price: "))
@@ -195,59 +208,55 @@ def add_product(inventory):
     except ValueError:
         print("Invalid number format. Product creation canceled.")
         return
-
-    new_item = {
-        "id": prod_id,
-        "name": name,
-        "price": price,
-        "stock": stock
-    }
-    
-    inventory.append(new_item)
-    print("\nProduct added successfully!")
+ 
+    if price < 0 or stock < 0:
+        print("Price and stock cannot be negative. Product creation canceled.")
+        return
+ 
+    if inventory.add_product(Product(product_id, name, price, stock)):
+        print("\nProduct added successfully!")
+    else:
+        print("\nA product with that ID already exists. Product creation canceled.")
 #update stock function
-def update_stock(inventory):
-    """Global function to handle user input and call the class method."""
+def update_stock_menu(inventory: Inventory) -> None:
     print("\nUpdate Stock")
-    prod_id = input("Enter Product ID: ").strip()
-
-    for p in inventory:
-        if p.get_product_id().lower() == prod_id.lower():
-            print("\nProduct Found:")
-            p.display_information()
-            
-            try:
-                # 1. Get the quantity as an integer from the user
-                quantity: int = int(input("Enter stock quantity to add (use negative to subtract): "))
-                
-                # 2. Pass that quantity into the product class method
-                p.update_stock(quantity)
-                
-                print("\nStock updated successfully!")
-                print("Updated Details:")
-                p.display_information()
-                return
-            except ValueError:
-                print("Invalid quantity format. Stock update canceled.")
-                return
-
-    print("\nProduct not found.")
+    product_id = input("Enter Product ID: ").strip()
+ 
+    product = inventory.find_by_id(product_id)
+    if product is None:
+        print("\nProduct not found.")
+        return
+ 
+    print("\nProduct Found:")
+    product.display_information()
+ 
+    try:
+        quantity = int(input("Enter stock quantity to add (use negative to subtract): "))
+    except ValueError:
+        print("Invalid quantity format. Stock update canceled.")
+        return
+ 
+    product.update_stock(quantity)
+    print("\nStock updated successfully!")
+    print("Updated Details:")
+    product.display_information()
 #search product function
-def search_product(inventory):
-    """Searches for a product by ID or name and prints multiline output."""
+def search_product_menu(inventory: Inventory) -> None:
     print("\nSearch Product")
-    prod_id = input("Enter Product ID: ").strip()
-
-    for p in inventory:
-        if p["id"].lower() == prod_id.lower() or prod_id.lower() in p["name"].lower():
-            print("\nProduct Found")
-            print("--------------------------------------------------")
-            print(f"ID: {p['id']}")
-            print(f"Name: {p['name']}")
-            print(f"Price: ${p['price']:.2f}")
-            print(f"Stock: {p['stock']}")
-            print("--------------------------------------------------")
-            return
+    keyword = input("Enter Product ID or Name: ").strip()
+ 
+    product = inventory.search_product(keyword) if keyword else None
+    if product is None:
+        print("\nProduct not found.")
+        return
+ 
+    print("\nProduct Found")
+    print("--------------------------------------------------")
+    print(f"ID: {product.get_product_id()}")
+    print(f"Name: {product.get_name()}")
+    print(f"Price: ${product.get_price():.2f}")
+    print(f"Stock: {product.get_stock()}")
+    print("--------------------------------------------------")
 
     print("\nProduct not found.")
 #display all products function
@@ -287,7 +296,7 @@ if __name__ == "__main__":
         elif option == "2":
             add_product(inventory)
         elif option == "3":
-            update_stock(inventory)
+            update_stock_menu(inventory)
         elif option == "4":
             search_product(inventory)
         elif option == "5":
