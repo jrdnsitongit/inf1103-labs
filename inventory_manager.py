@@ -1,6 +1,6 @@
 import json
 
-class product:
+class Product:
     def __init__(self, product_id: str, name: str, price: float, stock: int ):
         self.__product_id= product_id
         self.__name = name
@@ -41,10 +41,49 @@ class product:
             "stock": self.__stock
         }
 
+class Inventory:
+    def __init__(self):
+        self.__products = []
+
+    def add_product(self, product: Product) -> bool:
+        """Adds a Product. Returns False if the ID already exists."""
+        if self.find_by_id(product.get_product_id()) is not None:
+            return False
+        self.__products.append(product)
+        return True
+
+    def find_by_id(self, product_id: str):
+        """Returns the Product with this exact ID (case-insensitive), or None."""
+        for p in self.__products:
+            if p.get_product_id().lower() == product_id.lower():
+                return p
+        return None
+
+    def search_product(self, keyword: str):
+        """Returns the first Product whose ID or name matches keyword, or None."""
+        for p in self.__products:
+            if p.matches(keyword):
+                return p
+        return None
+
+    def display_all(self) -> None:
+        print("\nCurrent Inventory")
+        print("--------------------------------------------------")
+        if not self.__products:
+            print("No products currently in inventory.")
+        else:
+            for p in self.__products:
+                p.display_information()
+        print("--------------------------------------------------")
+
+    def to_list(self) -> list:
+        """Returns the products as a list of dictionaries (for saving to JSON)."""
+        return [p.to_dict() for p in self.__products]
+
+
 
 INVENTORY_FILE = "inventory.json"
 
-# Part 1: Load saved data from inventory.json
 def load_inventory():
     """
     Reads inventory.json if it exists.
