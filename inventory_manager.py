@@ -192,7 +192,7 @@ def generate_report(total_units, failed_attempts, history):
     print(f"Number of Failed/Rejected Entries: {failed_attempts}")
 
 #json functionalties
-def add_product(inventory: Inventory) -> None:
+def add_product_menu(inventory: Inventory) -> None:
     """Adds a new product dictionary using exact prompts."""
     print("\nAdd New Product")
     product_id = input("Product ID: ").strip()
@@ -292,21 +292,19 @@ if __name__ == "__main__":
         option = input("\nEnter option: ").strip()
 
         if option == "1":
-            display_all(inventory)
+            inventory.display_all()
         elif option == "2":
-            add_product(inventory)
+            add_product_menu(inventory)
         elif option == "3":
             update_stock_menu(inventory)
         elif option == "4":
-            search_product(inventory)
+            search_product_menu(inventory)
         elif option == "5":
             save_inventory(inventory)
         elif option == "6":
             print("\nSaving inventory before exit...")
-            with open(INVENTORY_FILE, "w") as file:
-                json.dump(inventory, file, indent=4)
-            print("Inventory saved successfully.\n")
-            print("Thank you for using Inventory Management System.")
+            save_inventory(inventory)
+            print("\nThank you for using Inventory Management System.")
             print("Program terminated.")
             break
         else:
