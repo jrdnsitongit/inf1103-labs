@@ -41,6 +41,31 @@ class Product:
             "stock": self.__stock
         }
 
+class PhysicalProduct(Product):
+    def __init__(self, product_id: str, name: str, price: float, stock: int, weight: float):
+        super().__init__(product_id, name, price, stock)
+        self.__weight = float(weight)
+
+    def get_weight(self) -> float:
+        return self.__weight
+
+    def display_information(self) -> None:
+        super().display_information()
+        print(f"    Weight: {self.__weight} kg")
+
+
+class DigitalProduct(Product):
+    def __init__(self, product_id: str, name: str, price: float, stock: int, download_size: float):
+        super().__init__(product_id, name, price, stock)
+        self.__download_size = float(download_size)
+
+    def get_download_size(self) -> float:
+        return self.__download_size
+
+    def display_information(self) -> None:
+        super().display_information()
+        print(f"    Download size: {self.__download_size} MB")
+
 class Inventory:
     def __init__(self):
         self.__products = []
