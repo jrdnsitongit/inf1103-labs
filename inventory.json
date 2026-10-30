@@ -1,0 +1,38 @@
+[
+    {
+        "product_id": "P001",
+        "name": "Laptop",
+        "price": 1200.0,
+        "stock": 15
+    },
+    {
+        "product_id": "P002",
+        "name": "Mouse",
+        "price": 25.5,
+        "stock": 20
+    },
+    {
+        "product_id": "P003",
+        "name": "Keyboard",
+        "price": 45.0,
+        "stock": 25
+    },
+    {
+        "product_id": "P004",
+        "name": "Monitor",
+        "price": 100.0,
+        "stock": 5
+    },
+    {
+        "product_id": "P005",
+        "name": "Gaming Monitor",
+        "price": 200.0,
+        "stock": 10
+    },
+    {
+        "product_id": "P006",
+        "name": "Laptop Stand",
+        "price": 20.0,
+        "stock": 50
+    }
+]
