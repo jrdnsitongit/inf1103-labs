@@ -54,5 +54,13 @@
         "stock": 30,
         "type": "digital",
         "download_size": 2000.0
+    },
+    {
+        "product_id": "P007",
+        "name": "Phone Case",
+        "price": 20.0,
+        "stock": 30,
+        "type": "physical",
+        "weight": 0.5
     }
 ]

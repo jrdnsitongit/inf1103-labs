@@ -326,21 +326,16 @@ def update_stock_menu(inventory: Inventory) -> None:
 def search_product_menu(inventory: Inventory) -> None:
     print("\nSearch Product")
     keyword = input("Enter Product ID or Name: ").strip()
- 
+
     product = inventory.search_product(keyword) if keyword else None
     if product is None:
         print("\nProduct not found.")
         return
- 
+
     print("\nProduct Found")
     print("--------------------------------------------------")
-    print(f"ID: {product.get_product_id()}")
-    print(f"Name: {product.get_name()}")
-    print(f"Price: ${product.get_price():.2f}")
-    print(f"Stock: {product.get_stock()}")
+    product.display_information()
     print("--------------------------------------------------")
-
-    print("\nProduct not found.")
 #display all products function
 def display_all(inventory):
     """Prints all products formatted in line with the sample outputs."""
