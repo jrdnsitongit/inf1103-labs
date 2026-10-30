@@ -1,6 +1,7 @@
+from abc import ABC, abstractmethod
 import json
 
-class Product:
+class Product(ABC):
     def __init__(self, product_id: str, name: str, price: float, stock: int ):
         self.__product_id= product_id
         self.__name = name
@@ -15,6 +16,11 @@ class Product:
 
     def display_information(self) -> None:
         print(f"ID: {self.__product_id} | Name: {self.__name} | Price: ${self.__price:.2f} | Stock: {self.__stock}")
+
+    @abstractmethod
+    def get_fulfilment_info(self) -> str:
+        """Each product type must say how it is fulfilled."""
+        pass
 
     def matches(self, keyword: str) -> bool:
         keyword = keyword.lower()
@@ -53,6 +59,9 @@ class PhysicalProduct(Product):
         super().display_information()
         print(f"    Weight: {self.__weight} kg")
 
+    def get_fulfilment_info(self) -> str:
+        return "Requires physical shipping."
+
 
 class DigitalProduct(Product):
     def __init__(self, product_id: str, name: str, price: float, stock: int, download_size: float):
@@ -65,6 +74,9 @@ class DigitalProduct(Product):
     def display_information(self) -> None:
         super().display_information()
         print(f"    Download size: {self.__download_size} MB")
+
+    def get_fulfilment_info(self) -> str:
+        return "Delivered digitally via download link."
 
 class Inventory:
     def __init__(self):
