@@ -71,6 +71,12 @@ class PhysicalProduct(Product, CanBeShipped):
     def calculate_shipping_cost(self) -> float:
         return 5.00 + self.__weight * 2.50
 
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data["type"] = "physical"
+        data["weight"] = self.__weight
+        return data
+
 
 class DigitalProduct(Product):
     def __init__(self, product_id: str, name: str, price: float, stock: int, download_size: float):
@@ -86,6 +92,12 @@ class DigitalProduct(Product):
 
     def get_fulfilment_info(self) -> str:
         return "Delivered digitally via download link."
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data["type"] = "digital"
+        data["download_size"] = self.__download_size
+        return data
 
 class Inventory:
     def __init__(self):
@@ -127,6 +139,20 @@ class Inventory:
         return [p.to_dict() for p in self.__products]
 
 
+def create_product_from_dict(item: dict) -> Product:
+    """Builds the correct Product subclass from one saved dictionary."""
+    product_id = item.get("product_id", item.get("id"))
+    product_type = item.get("type", "physical")
+
+    if product_type == "physical":
+        return PhysicalProduct(product_id, item["name"], item["price"],
+                               item["stock"], item.get("weight", 1.0))
+    elif product_type == "digital":
+        return DigitalProduct(product_id, item["name"], item["price"],
+                              item["stock"], item["download_size"])
+    else:
+        raise ValueError(f"Unknown product type: {product_type}")
+
 
 INVENTORY_FILE = "inventory.json"
 
@@ -140,15 +166,11 @@ def load_inventory() -> Inventory:
     try:
         with open(INVENTORY_FILE, "r") as file:
             data = json.load(file)
-        for item in data:
-            # accept both "product_id" (new) and "id" (Week 5 format)
-            product_id = item.get("product_id", item.get("id"))
-            inventory.add_product(
-                Product(product_id, item["name"], item["price"], item["stock"])
-            )
+            for item in data:
+                inventory.add_product(create_product_from_dict(item))
         print("inventory.json found.")
         print("Inventory loaded successfully.\n")
-    except (FileNotFoundError, json.JSONDecodeError, KeyError, TypeError, AttributeError):
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, TypeError, AttributeError, ValueError):
         print("inventory.json not found.")
         print("Starting with initial inventory.\n")
         inventory = Inventory()
@@ -159,9 +181,9 @@ def load_inventory() -> Inventory:
 def get_default_products() -> list:
     """Default inventory items matching the lab requirements."""
     return [
-        Product("P001", "Laptop", 1200.00, 15),
-        Product("P002", "Mouse", 25.50, 40),
-        Product("P003", "Keyboard", 45.00, 25),
+        PhysicalProduct("P001", "Laptop", 1200.00, 15, 2.5),
+        PhysicalProduct("P002", "Mouse", 25.50, 40, 0.5),
+        DigitalProduct("P003", "Keyboard", 45.00, 25, 1024),
     ]
 # Part 2: Save inventory list to inventory.json
 def save_inventory(inventory):
@@ -239,7 +261,6 @@ def generate_report(total_units, failed_attempts, history):
 
 #json functionalties
 def add_product_menu(inventory: Inventory) -> None:
-    """Adds a new product dictionary using exact prompts."""
     print("\nAdd New Product")
     product_id = input("Product ID: ").strip()
     name = input("Product Name: ").strip()
@@ -247,19 +268,34 @@ def add_product_menu(inventory: Inventory) -> None:
     if not product_id or not name:
         print("Product ID and name cannot be empty. Product creation canceled.")
         return
-    
+
+    print("Product type: 1. Physical  2. Digital")
+    ptype = input("Choose type: ").strip()
+    if ptype not in ("1", "2"):
+        print("Invalid product type. Product creation canceled.")
+        return
+
     try:
         price = float(input("Price: "))
         stock = int(input("Stock Quantity: "))
+        if ptype == "1":
+            extra = float(input("Weight (kg): "))
+        else:
+            extra = float(input("Download size (MB): "))
     except ValueError:
         print("Invalid number format. Product creation canceled.")
         return
- 
-    if price < 0 or stock < 0:
-        print("Price and stock cannot be negative. Product creation canceled.")
+
+    if price < 0 or stock < 0 or extra < 0:
+        print("Price, stock and weight/download size cannot be negative. Product creation canceled.")
         return
- 
-    if inventory.add_product(Product(product_id, name, price, stock)):
+
+    if ptype == "1":
+        product = PhysicalProduct(product_id, name, price, stock, extra)
+    else:
+        product = DigitalProduct(product_id, name, price, stock, extra)
+
+    if inventory.add_product(product):
         print("\nProduct added successfully!")
     else:
         print("\nA product with that ID already exists. Product creation canceled.")
