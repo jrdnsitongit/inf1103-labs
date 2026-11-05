@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import json
+import os
 
 class Supplier:
     def __init__(self, supplier_id: str, name: str, contact_email: str):
@@ -15,11 +16,12 @@ class Supplier:
                 "contact_email": self.__contact_email}
 
 class Product(ABC):
-    def __init__(self, product_id: str, name: str, price: float, stock: int ):
+    def __init__(self, product_id: str, name: str, price: float, stock: int, supplier: Supplier):
         self.__product_id= product_id
         self.__name = name
         self.__price = float(price)
         self.__stock = int(stock)
+        self.__supplier = supplier
 
     def update_stock(self, quantity: int) -> None:
         """Updates the stock using the given quantity integer."""
@@ -57,8 +59,14 @@ class Product(ABC):
             "product_id": self.__product_id,
             "name": self.__name,
             "price": self.__price,
-            "stock": self.__stock
+            "stock": self.__stock,
+            "supplier": self.__supplier.to_dict()
         }
+    def get_supplier(self) -> Supplier:
+        return self.__supplier
+    
+    def display_supplier(self) -> None:
+       self.__supplier.display_information()
 
 class CanBeShipped(ABC):
     @abstractmethod
@@ -67,8 +75,8 @@ class CanBeShipped(ABC):
         pass
 
 class PhysicalProduct(Product, CanBeShipped):
-    def __init__(self, product_id: str, name: str, price: float, stock: int, weight: float):
-        super().__init__(product_id, name, price, stock)
+    def __init__(self, product_id: str, name: str, price: float, stock: int, supplier: Supplier, weight: float):
+        super().__init__(product_id, name, price, stock, supplier)
         self.__weight = float(weight)
 
     def get_weight(self) -> float:
@@ -92,8 +100,8 @@ class PhysicalProduct(Product, CanBeShipped):
 
 
 class DigitalProduct(Product):
-    def __init__(self, product_id: str, name: str, price: float, stock: int, download_size: float):
-        super().__init__(product_id, name, price, stock)
+    def __init__(self, product_id: str, name: str, price: float, stock: int, supplier: Supplier, download_size: float):
+        super().__init__(product_id, name, price, stock, supplier)
         self.__download_size = float(download_size)
 
     def get_download_size(self) -> float:
@@ -157,46 +165,64 @@ def create_product_from_dict(item: dict) -> Product:
     product_id = item.get("product_id", item.get("id"))
     product_type = item.get("type", "physical")
 
+    s = item["supplier"]
+    supplier = Supplier(s["supplier_id"], s["name"], s["contact_email"])
+
     if product_type == "physical":
         return PhysicalProduct(product_id, item["name"], item["price"],
-                               item["stock"], item.get("weight", 1.0))
+                               item["stock"], supplier, item.get("weight", 1.0))
     elif product_type == "digital":
         return DigitalProduct(product_id, item["name"], item["price"],
-                              item["stock"], item["download_size"])
+                              item["stock"], supplier, item["download_size"])
     else:
         raise ValueError(f"Unknown product type: {product_type}")
 
 
 INVENTORY_FILE = "inventory.json"
 
-def load_inventory() -> Inventory:
-    """
-    Reads inventory.json if it exists.
-    Returns the loaded list of product dictionaries.
-    If the file does not exist, returns initial default inventory list.
-    """
+def build_default_inventory() -> Inventory:
+    """Builds an Inventory containing the default products."""
     inventory = Inventory()
-    try:
-        with open(INVENTORY_FILE, "r") as file:
-            data = json.load(file)
-            for item in data:
-                inventory.add_product(create_product_from_dict(item))
-        print("inventory.json found.")
-        print("Inventory loaded successfully.\n")
-    except (FileNotFoundError, json.JSONDecodeError, KeyError, TypeError, AttributeError, ValueError):
-        print("inventory.json not found.")
-        print("Starting with initial inventory.\n")
-        inventory = Inventory()
-        for p in get_default_products():
-            inventory.add_product(p)
+    for p in get_default_products():
+        inventory.add_product(p)
     return inventory
 
-def get_default_products() -> list:
+
+def load_inventory() -> Inventory:
+    """
+    Loads inventory.json. If the file does not exist, creates it
+    from the default products and returns that inventory.
+    """
+    if not os.path.exists(INVENTORY_FILE):
+        print("inventory.json not found.")
+        print("Creating inventory.json with the default products.")
+        inventory = build_default_inventory()
+        save_inventory(inventory)
+        print()
+        return inventory
+
+    try:
+        inventory = Inventory()
+        with open(INVENTORY_FILE, "r") as file:
+            data = json.load(file)
+        for item in data:
+            inventory.add_product(create_product_from_dict(item))
+        print("inventory.json found.")
+        print("Inventory loaded successfully.\n")
+        return inventory
+    except (json.JSONDecodeError, KeyError, TypeError, AttributeError, ValueError):
+        print("inventory.json could not be read (invalid or old format).")
+        print("Starting with the default inventory. The file is not overwritten until you save.\n")
+        return build_default_inventory()
+
+def get_default_products() -> list[Product]:
     """Default inventory items matching the lab requirements."""
+    tech_supply = Supplier("S001", "TechSupply", "sales@techsupply.com")
+    soft_house = Supplier("S002", "SoftHouse", "support@softhouse.com")
     return [
-        PhysicalProduct("P001", "Laptop", 1200.00, 15, 2.5),
-        PhysicalProduct("P002", "Mouse", 25.50, 40, 0.5),
-        DigitalProduct("P003", "Keyboard", 45.00, 25, 1024),
+        PhysicalProduct("P001", "Laptop", 1200.00, 15, tech_supply, 2.0),
+        PhysicalProduct("P002", "Mouse", 25.50, 40, tech_supply, 0.1),
+        DigitalProduct("P003", "Photo Editor", 59.00, 100, soft_house, 850),
     ]
 # Part 2: Save inventory list to inventory.json
 def save_inventory(inventory):
@@ -288,6 +314,17 @@ def add_product_menu(inventory: Inventory) -> None:
         print("Invalid product type. Product creation canceled.")
         return
 
+    print("\nSupplier details")
+    supplier_id = input("Supplier ID: ").strip()
+    supplier_name = input("Supplier Name: ").strip()
+    contact_email = input("Supplier Email: ").strip()
+
+    if not supplier_id or not supplier_name or not contact_email:
+        print("Supplier details cannot be empty. Product creation canceled.")
+        return
+
+    supplier = Supplier(supplier_id, supplier_name, contact_email)
+
     try:
         price = float(input("Price: "))
         stock = int(input("Stock Quantity: "))
@@ -304,14 +341,15 @@ def add_product_menu(inventory: Inventory) -> None:
         return
 
     if ptype == "1":
-        product = PhysicalProduct(product_id, name, price, stock, extra)
+        product = PhysicalProduct(product_id, name, price, stock, supplier, extra)
     else:
-        product = DigitalProduct(product_id, name, price, stock, extra)
+        product = DigitalProduct(product_id, name, price, stock, supplier, extra)
 
     if inventory.add_product(product):
         print("\nProduct added successfully!")
     else:
         print("\nA product with that ID already exists. Product creation canceled.")
+        
 #update stock function
 def update_stock_menu(inventory: Inventory) -> None:
     print("\nUpdate Stock")
