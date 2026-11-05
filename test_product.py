@@ -54,6 +54,7 @@ print("\nAfter del supplier:")
 laptop.display_supplier()
 editor.display_supplier()
 """
+"""
 #prediction where inventory object is there even product is deleted
 from inventory_manager import Supplier, PhysicalProduct, Inventory
 
@@ -92,3 +93,50 @@ inventory_b.remove_product("T1")
 print("\nInventory B emptied:")
 inventory_b.display_all()
 print("Product still exists:", laptop.get_name(), "| stock:", laptop.get_stock())
+  """
+#prediction where add the same Product to two different Orders, how many OrderLine objects and how many Product objects are created
+from inventory_manager import Supplier, PhysicalProduct, DigitalProduct, Inventory, Order
+
+print("\n--- Composition test: Order and OrderLine ---")
+
+supplier = Supplier("S001", "TechSupply", "sales@techsupply.com")
+laptop = PhysicalProduct("T1", "Laptop", 1200.00, 15, supplier, 2.0)
+mouse = PhysicalProduct("T2", "Mouse", 25.50, 40, supplier, 0.1)
+editor = DigitalProduct("T3", "Photo Editor", 59.00, 100, supplier, 850)
+
+inventory = Inventory()
+inventory.add_product(laptop)           # the laptop also sits in an inventory
+
+# 1. Create an order and add several products
+order1 = Order("O001")
+order1.add_order_line(laptop, 1)
+order1.add_order_line(mouse, 2)
+order1.add_order_line(editor, 1)
+
+print()
+order1.display_information()
+
+# 2. Add the SAME product to a different order
+order2 = Order("O002")
+order2.add_order_line(laptop, 3)
+
+print()
+order2.display_information()
+
+# 3. Compare the objects
+line_a = order1.get_order_lines()[0]
+line_b = order2.get_order_lines()[0]
+print("\nSame OrderLine object in both orders?", line_a is line_b)
+print("Same Product object in both lines?   ", line_a.get_product() is line_b.get_product())
+print("Product is also still in the inventory?", inventory.find_product("T1") is laptop)
+
+# 4. Remove a line through the Order
+print("\nRemoved Mouse line from order 1:", order1.remove_order_line("T2"))
+order1.display_information()
+print("Mouse still exists:", mouse.get_name(), "| stock:", mouse.get_stock())
+
+# 5. Remove the whole order from the scenario
+del order1
+print("\nAfter deleting order1, laptop still works:")
+laptop.display_information()
+print("Order 2 unaffected, total:", order2.calculate_total())
