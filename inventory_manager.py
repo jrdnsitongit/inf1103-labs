@@ -122,23 +122,23 @@ class DigitalProduct(Product):
 
 class Inventory:
     def __init__(self):
-        self.__products = []
+        self.__products: list[Product] = []
 
     def add_product(self, product: Product) -> bool:
         """Adds a Product. Returns False if the ID already exists."""
-        if self.find_by_id(product.get_product_id()) is not None:
+        if self.find_product(product.get_product_id()) is not None:
             return False
         self.__products.append(product)
         return True
 
-    def find_by_id(self, product_id: str):
+    def find_product(self, product_id: str)-> Product | None:
         """Returns the Product with this exact ID (case-insensitive), or None."""
         for p in self.__products:
             if p.get_product_id().lower() == product_id.lower():
                 return p
         return None
 
-    def search_product(self, keyword: str):
+    def search_product(self, keyword: str)-> Product | None:
         """Returns the first Product whose ID or name matches keyword, or None."""
         for p in self.__products:
             if p.matches(keyword):
@@ -155,9 +155,16 @@ class Inventory:
                 p.display_information()
         print("--------------------------------------------------")
 
-    def to_list(self) -> list:
+    def to_list(self) -> list[dict]:
         """Returns the products as a list of dictionaries (for saving to JSON)."""
         return [p.to_dict() for p in self.__products]
+
+    def remove_product(self, product_id: str) -> bool:
+        product = self.find_product(product_id)
+        if product is None:
+           return False
+        self.__products.remove(product)
+        return True
 
 
 def create_product_from_dict(item: dict) -> Product:
@@ -349,13 +356,13 @@ def add_product_menu(inventory: Inventory) -> None:
         print("\nProduct added successfully!")
     else:
         print("\nA product with that ID already exists. Product creation canceled.")
-        
+
 #update stock function
 def update_stock_menu(inventory: Inventory) -> None:
     print("\nUpdate Stock")
     product_id = input("Enter Product ID: ").strip()
  
-    product = inventory.find_by_id(product_id)
+    product = inventory.find_product(product_id)
     if product is None:
         print("\nProduct not found.")
         return
