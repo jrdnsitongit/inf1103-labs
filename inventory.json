@@ -3,64 +3,39 @@
         "product_id": "P001",
         "name": "Laptop",
         "price": 1200.0,
-        "stock": 15,
+        "stock": 0,
+        "supplier": {
+            "supplier_id": "S001",
+            "name": "TechSupply",
+            "contact_email": "sales@techsupply.com"
+        },
         "type": "physical",
-        "weight": 1.0
+        "weight": 2.0
     },
     {
         "product_id": "P002",
         "name": "Mouse",
         "price": 25.5,
-        "stock": 20,
+        "stock": 40,
+        "supplier": {
+            "supplier_id": "S001",
+            "name": "TechSupply",
+            "contact_email": "sales@techsupply.com"
+        },
         "type": "physical",
-        "weight": 1.0
+        "weight": 0.1
     },
     {
         "product_id": "P003",
-        "name": "Keyboard",
-        "price": 45.0,
-        "stock": 25,
-        "type": "physical",
-        "weight": 1.0
-    },
-    {
-        "product_id": "P004",
-        "name": "Monitor",
-        "price": 100.0,
-        "stock": 5,
-        "type": "physical",
-        "weight": 1.0
-    },
-    {
-        "product_id": "P005",
-        "name": "Gaming Monitor",
-        "price": 200.0,
-        "stock": 10,
-        "type": "physical",
-        "weight": 1.0
-    },
-    {
-        "product_id": "P006",
-        "name": "Laptop Stand",
-        "price": 20.0,
-        "stock": 50,
-        "type": "physical",
-        "weight": 1.0
-    },
-    {
-        "product_id": "P008",
-        "name": "HardDisk",
-        "price": 20.0,
-        "stock": 30,
+        "name": "Photo Editor",
+        "price": 59.0,
+        "stock": 100,
+        "supplier": {
+            "supplier_id": "S002",
+            "name": "SoftHouse",
+            "contact_email": "support@softhouse.com"
+        },
         "type": "digital",
-        "download_size": 2000.0
-    },
-    {
-        "product_id": "P007",
-        "name": "Phone Case",
-        "price": 20.0,
-        "stock": 30,
-        "type": "physical",
-        "weight": 0.5
+        "download_size": 850.0
     }
 ]
