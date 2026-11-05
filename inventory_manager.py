@@ -24,7 +24,6 @@ class Product(ABC):
         self.__supplier = supplier
 
     def update_stock(self, quantity: int) -> None:
-        """Updates the stock using the given quantity integer."""
         self.__stock += quantity
         if self.__stock < 0:
             self.__stock = 0
@@ -34,7 +33,6 @@ class Product(ABC):
 
     @abstractmethod
     def get_fulfilment_info(self) -> str:
-        """Each product type must say how it is fulfilled."""
         pass
 
     def matches(self, keyword: str) -> bool:
@@ -71,7 +69,6 @@ class Product(ABC):
 class CanBeShipped(ABC):
     @abstractmethod
     def calculate_shipping_cost(self) -> float:
-        """Implementing classes must provide a way to calculate shipping cost."""
         pass
 
 class PhysicalProduct(Product, CanBeShipped):
@@ -125,21 +122,18 @@ class Inventory:
         self.__products: list[Product] = []
 
     def add_product(self, product: Product) -> bool:
-        """Adds a Product. Returns False if the ID already exists."""
         if self.find_product(product.get_product_id()) is not None:
             return False
         self.__products.append(product)
         return True
 
     def find_product(self, product_id: str)-> Product | None:
-        """Returns the Product with this exact ID (case-insensitive), or None."""
         for p in self.__products:
             if p.get_product_id().lower() == product_id.lower():
                 return p
         return None
 
     def search_product(self, keyword: str)-> Product | None:
-        """Returns the first Product whose ID or name matches keyword, or None."""
         for p in self.__products:
             if p.matches(keyword):
                 return p
@@ -156,7 +150,6 @@ class Inventory:
         print("--------------------------------------------------")
 
     def to_list(self) -> list[dict]:
-        """Returns the products as a list of dictionaries (for saving to JSON)."""
         return [p.to_dict() for p in self.__products]
 
     def remove_product(self, product_id: str) -> bool:
@@ -166,9 +159,56 @@ class Inventory:
         self.__products.remove(product)
         return True
 
+class OrderLine:
+    def __init__(self, product: Product, quantity: int) -> None:
+        self.__product: Product = product
+        self.__quantity: int = quantity
+
+    def get_product(self) -> Product:
+        return self.__product
+
+    def get_quantity(self) -> int:
+        return self.__quantity
+
+    def calculate_subtotal(self) -> float:
+        return self.__product.get_price() * self.__quantity
+
+    def display_information(self) -> None:
+        print(f"{self.__product.get_name()} x {self.__quantity} = ${self.calculate_subtotal():.2f}")
+
+
+class Order:
+    def __init__(self, order_id: str) -> None:
+        self.__order_id: str = order_id
+        self.__order_lines: list[OrderLine] = []
+
+    def get_order_id(self) -> str:
+        return self.__order_id
+
+    def add_order_line(self, product: Product, quantity: int) -> None:
+        order_line = OrderLine(product, quantity)
+        self.__order_lines.append(order_line)
+
+    def remove_order_line(self, product_id: str) -> bool:
+        for line in self.__order_lines:
+            if line.get_product().get_product_id().lower() == product_id.lower():
+                self.__order_lines.remove(line)
+                return True
+        return False
+
+    def get_order_lines(self) -> list[OrderLine]:
+        return list(self.__order_lines)
+
+    def calculate_total(self) -> float:
+        return sum(line.calculate_subtotal() for line in self.__order_lines)
+
+    def display_information(self) -> None:
+        print(f"Order {self.__order_id}")
+        for line in self.__order_lines:
+            line.display_information()
+        print(f"Total: ${self.calculate_total():.2f}")
 
 def create_product_from_dict(item: dict) -> Product:
-    """Builds the correct Product subclass from one saved dictionary."""
     product_id = item.get("product_id", item.get("id"))
     product_type = item.get("type", "physical")
 
@@ -188,7 +228,6 @@ def create_product_from_dict(item: dict) -> Product:
 INVENTORY_FILE = "inventory.json"
 
 def build_default_inventory() -> Inventory:
-    """Builds an Inventory containing the default products."""
     inventory = Inventory()
     for p in get_default_products():
         inventory.add_product(p)
@@ -223,7 +262,6 @@ def load_inventory() -> Inventory:
         return build_default_inventory()
 
 def get_default_products() -> list[Product]:
-    """Default inventory items matching the lab requirements."""
     tech_supply = Supplier("S001", "TechSupply", "sales@techsupply.com")
     soft_house = Supplier("S002", "SoftHouse", "support@softhouse.com")
     return [
@@ -233,7 +271,6 @@ def get_default_products() -> list[Product]:
     ]
 # Part 2: Save inventory list to inventory.json
 def save_inventory(inventory):
-    """Saves current inventory list to inventory.json."""
     print("\nSaving inventory...")
     with open(INVENTORY_FILE, "w") as file:
         json.dump(inventory.to_list(), file, indent=4)
@@ -396,7 +433,6 @@ def search_product_menu(inventory: Inventory) -> None:
     print("--------------------------------------------------")
 #display all products function
 def display_all(inventory):
-    """Prints all products formatted in line with the sample outputs."""
     print("\nCurrent Inventory")
     print("--------------------------------------------------")
     if not inventory:
