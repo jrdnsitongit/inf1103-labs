@@ -1,5 +1,11 @@
-""" from inventory_manager import Product, PhysicalProduct, DigitalProduct, CanBeShipped
-
+from supplier import Supplier
+from product import Product
+from PhysicalProduct import PhysicalProduct
+from DigitalProduct import DigitalProduct
+from inventory import Inventory
+from OrderLine import OrderLine
+from order import Order
+""" 
 print("--- 1. Abstract class cannot be instantiated ---")
 try:
     Product("X", "Test", 1, 1)
@@ -94,6 +100,7 @@ print("\nInventory B emptied:")
 inventory_b.display_all()
 print("Product still exists:", laptop.get_name(), "| stock:", laptop.get_stock())
   """
+"""
 #prediction where add the same Product to two different Orders, how many OrderLine objects and how many Product objects are created
 from inventory_manager import Supplier, PhysicalProduct, DigitalProduct, Inventory, Order
 
@@ -140,3 +147,29 @@ del order1
 print("\nAfter deleting order1, laptop still works:")
 laptop.display_information()
 print("Order 2 unaffected, total:", order2.calculate_total())
+"""  
+"""  
+#part 6.2 test substitutablity of Product, PhysicalProduct, DigitalProduct
+def show_product_details(product: Product) -> None:
+        product.display_information()
+        print(product.get_fulfilment_info())
+
+supplier = Supplier("S001", "TechSupply", "sales@techsupply.com")
+laptop = PhysicalProduct("T1", "Laptop", 1200.00, 15, supplier, 2.0)
+editor = DigitalProduct("T2", "Photo Editor", 59.00, 100, supplier, 850)
+
+show_product_details(laptop)
+show_product_details(editor)
+"""
+#7.2 polymorphism test
+supplier = Supplier("S001", "TechSupply", "sales@techsupply.com")
+laptop = PhysicalProduct("T1", "Laptop", 1200.00, 15, supplier, 2.0)
+editor = DigitalProduct("T2", "Photo Editor", 59.00, 100, supplier, 850)
+
+inventory = Inventory()
+inventory.add_product(laptop)
+inventory.add_product(editor)
+
+for product in inventory.get_products():
+    product.display_information()
+    print(product.get_fulfilment_info())

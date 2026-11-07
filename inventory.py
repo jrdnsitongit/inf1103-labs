@@ -1,9 +1,10 @@
+
 from product import Product
 class Inventory:
     def __init__(self) -> None:
         self.__products: list[Product] = []
 
-    def add_product(self, product: Product) -> None:
+    def add_product(self, product: Product) -> bool:
         if self.find_product(product.get_product_id()) is not None:
             return False
         self.__products.append(product)
@@ -34,9 +35,11 @@ class Inventory:
     def to_list(self) -> list[dict]:
         return [p.to_dict() for p in self.__products]
 
-    def remove_product(self, product_id: str) -> None:
+    def remove_product(self, product_id: str) -> bool:
         product = self.find_product(product_id)
         if product is None:
            return False
         self.__products.remove(product)
         return True
+    def get_products(self) -> list[Product]:
+        return self.__products

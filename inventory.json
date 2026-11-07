@@ -37,5 +37,18 @@
         },
         "type": "digital",
         "download_size": 850.0
+    },
+    {
+        "product_id": "P004",
+        "name": "Monitor Arm",
+        "price": 20.0,
+        "stock": 20,
+        "supplier": {
+            "supplier_id": "S001",
+            "name": "Dominos",
+            "contact_email": "dominos@hotmail.com"
+        },
+        "type": "physical",
+        "weight": 2.0
     }
 ]

@@ -1,5 +1,6 @@
 from product import Product
 from canbeshipped import CanBeShipped
+from supplier import Supplier
 
 class PhysicalProduct(Product, CanBeShipped):
     def __init__(self, product_id: str, name: str, price: float, stock: int, supplier: Supplier, weight: float) -> None:
