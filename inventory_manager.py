@@ -1,212 +1,19 @@
 from abc import ABC, abstractmethod
 import json
 import os
-
-class Supplier:
-    def __init__(self, supplier_id: str, name: str, contact_email: str):
-        self.__supplier_id: str = supplier_id
-        self.__name: str = name
-        self.__contact_email: str = contact_email
-
-    def display_information(self) -> None:
-        print(f"Supplier: {self.__name} (ID: {self.__supplier_id}) | Email: {self.__contact_email}")
-
-    def to_dict(self) -> dict:
-        return {"supplier_id": self.__supplier_id, "name": self.__name,
-                "contact_email": self.__contact_email}
-
-class Product(ABC):
-    def __init__(self, product_id: str, name: str, price: float, stock: int, supplier: Supplier):
-        self.__product_id= product_id
-        self.__name = name
-        self.__price = float(price)
-        self.__stock = int(stock)
-        self.__supplier = supplier
-
-    def update_stock(self, quantity: int) -> None:
-        self.__stock += quantity
-        if self.__stock < 0:
-            self.__stock = 0
-
-    def display_information(self) -> None:
-        print(f"ID: {self.__product_id} | Name: {self.__name} | Price: ${self.__price:.2f} | Stock: {self.__stock}")
-
-    @abstractmethod
-    def get_fulfilment_info(self) -> str:
-        pass
-
-    def matches(self, keyword: str) -> bool:
-        keyword = keyword.lower()
-        return (self.__product_id.lower() == keyword
-                or keyword in self.__name.lower())
-    
-    def get_product_id(self) -> str:
-        return self.__product_id
-
-    def get_name(self) -> str:
-        return self.__name
-
-    def get_price(self) -> float:
-        return self.__price
-
-    def get_stock(self) -> int:
-        return self.__stock
-    
-    def to_dict(self) -> dict:
-        return {
-            "product_id": self.__product_id,
-            "name": self.__name,
-            "price": self.__price,
-            "stock": self.__stock,
-            "supplier": self.__supplier.to_dict()
-        }
-    def get_supplier(self) -> Supplier:
-        return self.__supplier
-    
-    def display_supplier(self) -> None:
-       self.__supplier.display_information()
-
-class CanBeShipped(ABC):
-    @abstractmethod
-    def calculate_shipping_cost(self) -> float:
-        pass
-
-class PhysicalProduct(Product, CanBeShipped):
-    def __init__(self, product_id: str, name: str, price: float, stock: int, supplier: Supplier, weight: float):
-        super().__init__(product_id, name, price, stock, supplier)
-        self.__weight = float(weight)
-
-    def get_weight(self) -> float:
-        return self.__weight
-
-    def display_information(self) -> None:
-        super().display_information()
-        print(f"    Weight: {self.__weight} kg")
-
-    def get_fulfilment_info(self) -> str:
-        return "Requires physical shipping."
-
-    def calculate_shipping_cost(self) -> float:
-        return 5.00 + self.__weight * 2.50
-
-    def to_dict(self) -> dict:
-        data = super().to_dict()
-        data["type"] = "physical"
-        data["weight"] = self.__weight
-        return data
+from supplier import Supplier
+from product import Product
+from PhysicalProduct import PhysicalProduct
+from DigitalProduct import DigitalProduct
+from inventory import Inventory
+from OrderLine import OrderLine
+from order import Order
 
 
-class DigitalProduct(Product):
-    def __init__(self, product_id: str, name: str, price: float, stock: int, supplier: Supplier, download_size: float):
-        super().__init__(product_id, name, price, stock, supplier)
-        self.__download_size = float(download_size)
-
-    def get_download_size(self) -> float:
-        return self.__download_size
-
-    def display_information(self) -> None:
-        super().display_information()
-        print(f"    Download size: {self.__download_size} MB")
-
-    def get_fulfilment_info(self) -> str:
-        return "Delivered digitally via download link."
-
-    def to_dict(self) -> dict:
-        data = super().to_dict()
-        data["type"] = "digital"
-        data["download_size"] = self.__download_size
-        return data
-
-class Inventory:
-    def __init__(self):
-        self.__products: list[Product] = []
-
-    def add_product(self, product: Product) -> bool:
-        if self.find_product(product.get_product_id()) is not None:
-            return False
-        self.__products.append(product)
-        return True
-
-    def find_product(self, product_id: str)-> Product | None:
-        for p in self.__products:
-            if p.get_product_id().lower() == product_id.lower():
-                return p
-        return None
-
-    def search_product(self, keyword: str)-> Product | None:
-        for p in self.__products:
-            if p.matches(keyword):
-                return p
-        return None
-
-    def display_all(self) -> None:
-        print("\nCurrent Inventory")
-        print("--------------------------------------------------")
-        if not self.__products:
-            print("No products currently in inventory.")
-        else:
-            for p in self.__products:
-                p.display_information()
-        print("--------------------------------------------------")
-
-    def to_list(self) -> list[dict]:
-        return [p.to_dict() for p in self.__products]
-
-    def remove_product(self, product_id: str) -> bool:
-        product = self.find_product(product_id)
-        if product is None:
-           return False
-        self.__products.remove(product)
-        return True
-
-class OrderLine:
-    def __init__(self, product: Product, quantity: int) -> None:
-        self.__product: Product = product
-        self.__quantity: int = quantity
-
-    def get_product(self) -> Product:
-        return self.__product
-
-    def get_quantity(self) -> int:
-        return self.__quantity
-
-    def calculate_subtotal(self) -> float:
-        return self.__product.get_price() * self.__quantity
-
-    def display_information(self) -> None:
-        print(f"{self.__product.get_name()} x {self.__quantity} = ${self.calculate_subtotal():.2f}")
 
 
-class Order:
-    def __init__(self, order_id: str) -> None:
-        self.__order_id: str = order_id
-        self.__order_lines: list[OrderLine] = []
 
-    def get_order_id(self) -> str:
-        return self.__order_id
 
-    def add_order_line(self, product: Product, quantity: int) -> None:
-        order_line = OrderLine(product, quantity)
-        self.__order_lines.append(order_line)
-
-    def remove_order_line(self, product_id: str) -> bool:
-        for line in self.__order_lines:
-            if line.get_product().get_product_id().lower() == product_id.lower():
-                self.__order_lines.remove(line)
-                return True
-        return False
-
-    def get_order_lines(self) -> list[OrderLine]:
-        return list(self.__order_lines)
-
-    def calculate_total(self) -> float:
-        return sum(line.calculate_subtotal() for line in self.__order_lines)
-
-    def display_information(self) -> None:
-        print(f"Order {self.__order_id}")
-        for line in self.__order_lines:
-            line.display_information()
-        print(f"Total: ${self.calculate_total():.2f}")
 
 def create_product_from_dict(item: dict) -> Product:
     product_id = item.get("product_id", item.get("id"))
@@ -270,7 +77,7 @@ def get_default_products() -> list[Product]:
         DigitalProduct("P003", "Photo Editor", 59.00, 100, soft_house, 850),
     ]
 # Part 2: Save inventory list to inventory.json
-def save_inventory(inventory):
+def save_inventory(inventory: Inventory) -> None:
     print("\nSaving inventory...")
     with open(INVENTORY_FILE, "w") as file:
         json.dump(inventory.to_list(), file, indent=4)
