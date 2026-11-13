@@ -8,7 +8,7 @@ from DigitalProduct import DigitalProduct
 from inventory import Inventory
 from OrderLine import OrderLine
 from order import Order
-
+from product_factory import ProductFactory
 
 
 
@@ -19,14 +19,9 @@ def create_product_from_dict(item: dict) -> Product:
     s = item["supplier"]
     supplier = Supplier(s["supplier_id"], s["name"], s["contact_email"])
 
-    if product_type == "physical":
-        return PhysicalProduct(product_id, item["name"], item["price"],
-                               item["stock"], supplier, item.get("weight", 1.0))
-    elif product_type == "digital":
-        return DigitalProduct(product_id, item["name"], item["price"],
-                              item["stock"], supplier, item["download_size"])
-    else:
-        raise ValueError(f"Unknown product type: {product_type}")
+    extra = item.get("weight") if product_type == "physical" else item.get("download_size")
+
+    return ProductFactory.create_product(product_type, product_id, item["name"], item["price"], item["stock"], supplier, extra)
 
 
 INVENTORY_FILE = "inventory.json"
@@ -69,9 +64,9 @@ def get_default_products() -> list[Product]:
     tech_supply = Supplier("S001", "TechSupply", "sales@techsupply.com")
     soft_house = Supplier("S002", "SoftHouse", "support@softhouse.com")
     return [
-        PhysicalProduct("P001", "Laptop", 1200.00, 15, tech_supply, 2.0),
-        PhysicalProduct("P002", "Mouse", 25.50, 40, tech_supply, 0.1),
-        DigitalProduct("P003", "Photo Editor", 59.00, 100, soft_house, 850),
+        ProductFactory.create_product("physical", "P001", "Laptop", 1200.00, 15, tech_supply, 2.5),
+        ProductFactory.create_product("physical", "P002", "Mouse", 25.50, 40, tech_supply, 0.1),
+        ProductFactory.create_product("digital", "P003", "Photo Editor", 59.00, 100, soft_house, 100.0),
     ]
 # Part 2: Save inventory list to inventory.json
 def save_inventory(inventory: Inventory) -> None:
@@ -127,9 +122,9 @@ def add_product_menu(inventory: Inventory) -> None:
         return
 
     if ptype == "1":
-        product = PhysicalProduct(product_id, name, price, stock, supplier, extra)
+        product = ProductFactory.create_product("physical", product_id, name, price, stock, supplier, extra)
     else:
-        product = DigitalProduct(product_id, name, price, stock, supplier, extra)
+        product = ProductFactory.create_product("digital", product_id, name, price, stock, supplier, extra)
 
     if inventory.add_product(product):
         print("\nProduct added successfully!")

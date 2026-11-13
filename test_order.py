@@ -4,7 +4,7 @@ from supplier import Supplier
 from PhysicalProduct import PhysicalProduct
 from order import Order
 from discount_strategy import BulkDiscount, PercentageDiscount, StudentDiscount
-
+from product_factory import ProductFactory
 supplier = Supplier("S001", "TechSupply", "sales@techsupply.com")
 item = PhysicalProduct("T1", "Widget", 50.00, 20, supplier, 1.0)
 
@@ -23,3 +23,7 @@ print("Default (no discount):", default_order.calculate_total())
 student_order = Order("O003", StudentDiscount())
 student_order.add_order_line(item, 5)
 print("Student Discount:", student_order.calculate_total())
+
+#3.2 test whether product factory can take in 'service'
+
+ProductFactory.create_product("service", "S1", "Installation", 30.0, 5, supplier)
