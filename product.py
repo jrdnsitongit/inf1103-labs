@@ -3,16 +3,36 @@ from abc import ABC, abstractmethod
 
 class Product(ABC):
     def __init__(self, product_id: str, name: str, price: float, stock: int, supplier: Supplier) -> None:
-        self.__product_id:str = product_id
-        self.__name: str = name
-        self.__price: float = float(price)
-        self.__stock: int = int(stock)
-        self.__supplier :Supplier = supplier
+        if not isinstance(product_id, str) or not product_id.strip():
+            raise ValueError("Product ID cannot be empty.")
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("Product name cannot be empty.")
+        if not isinstance(supplier, Supplier):
+            raise TypeError("Supplier must be a valid Supplier instance.")
 
+        price_val = float(price)
+        stock_val = int(stock)
+        if price_val < 0:
+            raise ValueError("Price cannot be negative.")
+        if stock_val < 0:
+            raise ValueError("Stock cannot be negative.")
+        
+        self.__product_id:str = product_id.strip()
+        self.__name: str = name.strip()
+        self.__price: float = price_val
+        self.__stock: int = stock_val
+        self.__supplier :Supplier = supplier
+    
     def update_stock(self, quantity: int) -> None:
+        if isinstance(quantity, bool) or not isinstance(quantity, int):
+            raise TypeError("Quantity must be an integer.")
+        if quantity == 0:
+            raise ValueError("Quantity cannot be zero.")
+        if self.__stock == 0 and quantity < 0:
+            raise ValueError("No stock available (current stock: 0).")
+        if self.__stock + quantity < 0:
+            raise ValueError("Insufficient stock available.")
         self.__stock += quantity
-        if self.__stock < 0:
-            self.__stock = 0
 
     def display_information(self) -> None:
         print(f"ID: {self.__product_id} | Name: {self.__name} | Price: ${self.__price:.2f} | Stock: {self.__stock}")
@@ -22,9 +42,11 @@ class Product(ABC):
         pass
 
     def matches(self, keyword: str) -> bool:
-        keyword = keyword.lower()
-        return (self.__product_id.lower() == keyword
-                or keyword in self.__name.lower())
+        if not isinstance(keyword, str) or not keyword.strip():
+            return False
+        cleaned = keyword.strip().lower()
+        return (self.__product_id.lower() == cleaned
+                or cleaned in self.__name.lower())
     
     def get_product_id(self) -> str:
         return self.__product_id

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from ast import While
 import json
 import os
 from supplier import Supplier
@@ -10,19 +11,80 @@ from OrderLine import OrderLine
 from order import Order
 from product_factory import ProductFactory
 
+def get_non_empty_input(prompt: str) -> str:
+    while True:
+        value = input(prompt).strip()
+        if value:
+            return value
+        print("Input cannot be empty. Please try again.")
 
+
+def get_valid_email(prompt: str) -> str:
+    while True:
+        email = input(prompt).strip()
+        if not email:
+            print("Email cannot be empty. Please try again.")
+            continue
+        if " " not in email and "@" in email:
+            local_part, _, domain_part = email.partition("@")
+            if local_part and "." in domain_part and not domain_part.startswith(".") and not domain_part.endswith("."):
+                return email
+        print("Invalid email format (e.g., name@example.com). Please try again.")
+
+
+def get_non_negative_float(prompt: str) -> float:
+    while True:
+        try:
+            value = float(input(prompt).strip())
+            if value < 0:
+                print("Value cannot be negative. Please try again.")
+                continue
+            return value
+        except ValueError:
+            print("Invalid number format. Please enter a valid decimal number.")
+
+
+def get_non_negative_int(prompt: str) -> int:
+    while True:
+        try:
+            value = int(input(prompt).strip())
+            if value < 0:
+                print("Value cannot be negative. Please try again.")
+                continue
+            return value
+        except ValueError:
+            print("Invalid integer format. Please enter a whole number.")
+
+
+def get_valid_int(prompt: str) -> int:
+    while True:
+        try:
+            return int(input(prompt).strip())
+        except ValueError:
+            print("Invalid quantity format. Please enter a whole number.")
 
 def create_product_from_dict(item: dict) -> Product:
     product_id = item.get("product_id", item.get("id"))
     product_type = item.get("type", "physical")
+    name = item["name"]
+    price = float(item["price"])
+    stock = int(item["stock"])
+
+    if not product_id or not name:
+        raise ValueError("Product ID and name must not be empty.")
+    if price < 0 or stock < 0:
+        raise ValueError("Price and stock cannot be negative.")
 
     s = item["supplier"]
+    if not s.get("supplier_id") or not s.get("name") or not s.get("contact_email"):
+        raise ValueError("Incomplete supplier details.")
     supplier = Supplier(s["supplier_id"], s["name"], s["contact_email"])
 
     extra = item.get("weight") if product_type == "physical" else item.get("download_size")
+    if extra is None or float(extra) < 0:
+        raise ValueError("Invalid weight or download size.")
 
-    return ProductFactory.create_product(product_type, product_id, item["name"], item["price"], item["stock"], supplier, extra)
-
+    return ProductFactory.create_product(product_type, product_id, name, price, stock, supplier, float(extra))
 
 INVENTORY_FILE = "inventory.json"
 
@@ -75,55 +137,38 @@ def save_inventory(inventory: Inventory) -> None:
         json.dump(inventory.to_list(), file, indent=4)
     print("Inventory saved successfully to inventory.json.")
 
-
-
-
-
 #json functionalties
 def add_product_menu(inventory: Inventory) -> None:
     print("\nAdd New Product")
-    product_id = input("Product ID: ").strip()
-    name = input("Product Name: ").strip()
 
-    if not product_id or not name:
-        print("Product ID and name cannot be empty. Product creation canceled.")
-        return
+    while True:
+        product_id = get_non_empty_input("Product ID: ")
+        if inventory.find_product(product_id) is not None:
+                    print("A product with that ID already exists. Please enter a unique Product ID.")
+                    continue
+        break
+    name = get_non_empty_input("Product Name: ")
 
     print("Product type: 1. Physical  2. Digital")
-    ptype = input("Choose type: ").strip()
-    if ptype not in ("1", "2"):
-        print("Invalid product type. Product creation canceled.")
-        return
+    while True:
+        ptype = input("Choose type: ").strip()
+        if ptype in ("1", "2"):
+            break
+        print("Invalid product type. Please enter 1 or 2.")
 
     print("\nSupplier details")
-    supplier_id = input("Supplier ID: ").strip()
-    supplier_name = input("Supplier Name: ").strip()
-    contact_email = input("Supplier Email: ").strip()
-
-    if not supplier_id or not supplier_name or not contact_email:
-        print("Supplier details cannot be empty. Product creation canceled.")
-        return
-
+    supplier_id = get_non_empty_input("Supplier ID: ")
+    supplier_name = get_non_empty_input("Supplier Name: ")
+    contact_email = get_non_empty_input("Supplier Email: ")
     supplier = Supplier(supplier_id, supplier_name, contact_email)
-
-    try:
-        price = float(input("Price: "))
-        stock = int(input("Stock Quantity: "))
-        if ptype == "1":
-            extra = float(input("Weight (kg): "))
-        else:
-            extra = float(input("Download size (MB): "))
-    except ValueError:
-        print("Invalid number format. Product creation canceled.")
-        return
-
-    if price < 0 or stock < 0 or extra < 0:
-        print("Price, stock and weight/download size cannot be negative. Product creation canceled.")
-        return
+    price = get_non_negative_float("Price: ")
+    stock = get_non_negative_int("Stock Quantity: ")
 
     if ptype == "1":
+        extra = get_non_negative_float("Weight (kg): ")
         product = ProductFactory.create_product("physical", product_id, name, price, stock, supplier, extra)
     else:
+        extra = get_non_negative_float("Download size (MB): ")
         product = ProductFactory.create_product("digital", product_id, name, price, stock, supplier, extra)
 
     if inventory.add_product(product):
@@ -134,7 +179,7 @@ def add_product_menu(inventory: Inventory) -> None:
 #update stock function
 def update_stock_menu(inventory: Inventory) -> None:
     print("\nUpdate Stock")
-    product_id = input("Enter Product ID: ").strip()
+    product_id = get_non_empty_input("Enter Product ID: ").strip()
  
     product = inventory.find_product(product_id)
     if product is None:
@@ -144,20 +189,24 @@ def update_stock_menu(inventory: Inventory) -> None:
     print("\nProduct Found:")
     product.display_information()
  
-    try:
-        quantity = int(input("Enter stock quantity to add (use negative to subtract): "))
-    except ValueError:
-        print("Invalid quantity format. Stock update canceled.")
-        return
- 
-    product.update_stock(quantity)
+    while True:
+            quantity = get_valid_int("Enter stock quantity to add (use negative to subtract): ")
+            if hasattr(product, "stock") and product.stock + quantity < 0:
+                print(f"Insufficient stock (current stock: {product.stock}). Please enter a valid quantity.")
+                continue
+            try:
+                product.update_stock(quantity)
+                break
+            except ValueError as e:
+                print(f"Invalid stock update: {e}")
+    
     print("\nStock updated successfully!")
     print("Updated Details:")
     product.display_information()
 #search product function
 def search_product_menu(inventory: Inventory) -> None:
     print("\nSearch Product")
-    keyword = input("Enter Product ID or Name: ").strip()
+    keyword = get_non_empty_input("Enter Product ID or Name: ").strip()
 
     product = inventory.search_product(keyword) if keyword else None
     if product is None:
@@ -169,7 +218,6 @@ def search_product_menu(inventory: Inventory) -> None:
     product.display_information()
     print("--------------------------------------------------")
 
-  # Main program
 # Main Menu Application Loop
 if __name__ == "__main__":
     print("==========================================")

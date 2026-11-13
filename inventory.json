@@ -3,7 +3,7 @@
         "product_id": "P001",
         "name": "Laptop",
         "price": 1200.0,
-        "stock": 15,
+        "stock": 12,
         "supplier": {
             "supplier_id": "S001",
             "name": "TechSupply",
@@ -37,18 +37,5 @@
         },
         "type": "digital",
         "download_size": 100.0
-    },
-    {
-        "product_id": "P004",
-        "name": "Monitor Arm",
-        "price": 20.0,
-        "stock": 100,
-        "supplier": {
-            "supplier_id": "S004",
-            "name": "FedEx",
-            "contact_email": "fedex@hotmail.com"
-        },
-        "type": "physical",
-        "weight": 2.0
     }
 ]

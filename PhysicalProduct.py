@@ -5,7 +5,11 @@ from supplier import Supplier
 class PhysicalProduct(Product, CanBeShipped):
     def __init__(self, product_id: str, name: str, price: float, stock: int, supplier: Supplier, weight: float) -> None:
         super().__init__(product_id, name, price, stock, supplier)
-        self.__weight = float(weight)
+        
+        weight_val = float(weight)
+        if weight_val <= 0:
+            raise ValueError("Weight must be greater than zero.")
+        self.__weight: float = weight_val
 
     def get_weight(self) -> float:
         return self.__weight
