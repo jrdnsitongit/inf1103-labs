@@ -3,23 +3,40 @@ from product import Product
 from discount_strategy import DiscountStrategy, NoDiscount
 class Order:
     def __init__(self, order_id: str, discount_strategy: DiscountStrategy | None= None) -> None:
+        if not isinstance(order_id, str) or not order_id.strip():
+            raise ValueError("Order ID cannot be empty.")
+        if discount_strategy is not None and not isinstance(discount_strategy, DiscountStrategy):
+            raise TypeError("Discount strategy must be a valid DiscountStrategy instance.")
+
         self.__order_id: str = order_id
         self.__order_lines: list[OrderLine] = []
         self.__discount_strategy: DiscountStrategy = discount_strategy if discount_strategy is not None else NoDiscount()
 
     def set_discount(self, discount_strategy: DiscountStrategy) -> None:
+        if not isinstance(discount_strategy, DiscountStrategy):
+            raise TypeError("Discount strategy must be a valid DiscountStrategy instance.")
         self.__discount_strategy = discount_strategy
 
     def get_order_id(self) -> str:
         return self.__order_id
 
     def add_order_line(self, product: Product, quantity: int) -> None:
+        if not isinstance(product, Product):
+            raise TypeError("Product must be a valid Product instance.")
+        if isinstance(quantity, bool) or not isinstance(quantity, int):
+            raise TypeError("Quantity must be an integer.")
+        if quantity <= 0:
+            raise ValueError("Order quantity must be greater than zero.")
+
         order_line = OrderLine(product, quantity)
         self.__order_lines.append(order_line)
 
     def remove_order_line(self, product_id: str) -> bool:
+        if not isinstance(product_id, str) or not product_id.strip():
+            return False
+        cleaned_id = product_id.strip().lower()
         for line in self.__order_lines:
-            if line.get_product().get_product_id().lower() == product_id.lower():
+            if line.get_product().get_product_id().lower() == cleaned_id:
                 self.__order_lines.remove(line)
                 return True
         return False

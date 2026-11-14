@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from ast import While
+import csv
 import json
 import os
 from supplier import Supplier
@@ -137,6 +138,17 @@ def save_inventory(inventory: Inventory) -> None:
         json.dump(inventory.to_list(), file, indent=4)
     print("Inventory saved successfully to inventory.json.")
 
+def get_positive_float(prompt: str) -> float:
+    while True:
+        try:
+            value = float(input(prompt))
+            if value <= 0:
+                print("Please enter a number greater than zero.")
+                continue
+            return value
+        except ValueError:
+            print("Please enter a valid number, e.g. 12.50")
+
 #json functionalties
 def add_product_menu(inventory: Inventory) -> None:
     print("\nAdd New Product")
@@ -159,9 +171,9 @@ def add_product_menu(inventory: Inventory) -> None:
     print("\nSupplier details")
     supplier_id = get_non_empty_input("Supplier ID: ")
     supplier_name = get_non_empty_input("Supplier Name: ")
-    contact_email = get_non_empty_input("Supplier Email: ")
+    contact_email = get_valid_email("Supplier Email: ")
     supplier = Supplier(supplier_id, supplier_name, contact_email)
-    price = get_non_negative_float("Price: ")
+    price = get_positive_float("Price: ")
     stock = get_non_negative_int("Stock Quantity: ")
 
     if ptype == "1":
@@ -218,6 +230,51 @@ def search_product_menu(inventory: Inventory) -> None:
     product.display_information()
     print("--------------------------------------------------")
 
+#load products from csv file
+def load_products(path: str, inventory: Inventory, supplier: Supplier) -> None:
+    try:
+        file = open(path, newline="")
+    except FileNotFoundError:
+        print(f"Products file not found: {path}")
+    else:
+        loaded = 0
+        with file:
+            reader = csv.reader(file)
+            next(reader, None)  # Skip header row
+
+            for row_num, row in enumerate(reader, start=2):
+                try:
+                    if len(row) != 5:
+                        raise ValueError(f"Expected 5 columns, got {len(row)}")
+
+                    product_type = row[0].strip().lower()
+                    product_id = row[1].strip()
+                    name = row[2].strip()
+                    price = float(row[3].strip())
+                    stock_quantity = int(row[4].strip())
+
+                    # Default weight / download_size (1.0) since CSV has 5 columns
+                    product = ProductFactory.create_product(
+                        product_type,
+                        product_id,
+                        name,
+                        price,
+                        stock_quantity,
+                        supplier,
+                        1.0,
+                    )
+
+                    if inventory.add_product(product):
+                        loaded += 1
+                    else:
+                        print(f"Row {row_num} skipped: Duplicate product ID '{product_id}'.")
+                except ValueError as e:
+                    print(f"Row {row_num} skipped ({row}): {e}")
+
+        print(f"{loaded} products loaded.")
+    finally:
+        print("Load attempt finished.")
+
 # Main Menu Application Loop
 if __name__ == "__main__":
     print("==========================================")
@@ -233,7 +290,8 @@ if __name__ == "__main__":
         print("3. Update Stock")
         print("4. Search Product")
         print("5. Save Inventory")
-        print("6. Exit")
+        print("6. Load Products from CSV")
+        print("7. Exit")
         print("------------------------")
 
         option = input("\nEnter option: ").strip()
@@ -249,6 +307,10 @@ if __name__ == "__main__":
         elif option == "5":
             save_inventory(inventory)
         elif option == "6":
+            csv_path = input("Enter CSV file path (default: products.csv): ").strip() or "products.csv"
+            default_supplier = Supplier("S001", "TechSupply", "sales@techsupply.com")
+            load_products(csv_path, inventory, default_supplier)
+        elif option == "7":
             print("\nThank you for using Inventory Management System.")
             print("Program terminated.")
             break
